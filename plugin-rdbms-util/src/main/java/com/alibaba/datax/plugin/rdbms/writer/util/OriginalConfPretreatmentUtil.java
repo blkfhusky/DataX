@@ -34,14 +34,14 @@ public final class OriginalConfPretreatmentUtil {
         simplifyConf(originalConfig);
 
         /*
-        未兼容在没有表时创建表的操作，校验传入的表和sql是否有目标表
+        为兼容在没有表时创建表的操作，需校验传入的table和preSql是否匹配，如果匹配则说明数据库中尚无该表，可跳过dealColumnConf
         预处理配置文件列信息，会和数据库中的表做对比，表不存在时会报错,包含下列操作
         1. 将*替换为从数据库中查出的所有列名，并log.warn
         2. 校验传入列长度是否大于数据库表列长度
         3. 判断传入的列是否有重复的，有重复的报错
         4. 判断传入的所有列是否在表中都存在，有不存在的报错
          */
-        if (!matchTableAndSql(originalConfig)) {
+        if (!matchTableAndCreateSql(originalConfig)) {
             dealColumnConf(originalConfig);
         }
         dealWriteMode(originalConfig, dataBaseType);
@@ -198,7 +198,7 @@ public final class OriginalConfPretreatmentUtil {
      * @param originalConfig 源配置
      * @return table是否存在
      */
-    public static boolean matchTableAndSql(Configuration originalConfig) {
+    public static boolean matchTableAndCreateSql(Configuration originalConfig) {
         List<String> tables = originalConfig.getList(String.format(
                 "%s[0].%s", Constant.CONN_MARK, Key.TABLE), String.class);
         List<String> preSqls = originalConfig.getList(Key.PRE_SQL, String.class);
