@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public final class OriginalConfPretreatmentUtil {
     private static final Logger LOG = LoggerFactory
@@ -32,7 +33,17 @@ public final class OriginalConfPretreatmentUtil {
 
         simplifyConf(originalConfig);
 
-        dealColumnConf(originalConfig);
+        /*
+        未兼容在没有表时创建表的操作，校验传入的表和sql是否有目标表
+        预处理配置文件列信息，会和数据库中的表做对比，表不存在时会报错,包含下列操作
+        1. 将*替换为从数据库中查出的所有列名，并log.warn
+        2. 校验传入列长度是否大于数据库表列长度
+        3. 判断传入的列是否有重复的，有重复的报错
+        4. 判断传入的所有列是否在表中都存在，有不存在的报错
+         */
+        if (!matchTableAndSql(originalConfig)) {
+            dealColumnConf(originalConfig);
+        }
         dealWriteMode(originalConfig, dataBaseType);
     }
 
@@ -99,10 +110,10 @@ public final class OriginalConfPretreatmentUtil {
         } else {
             boolean isPreCheck = originalConfig.getBool(Key.DRYRUN, false);
             List<String> allColumns;
-            if (isPreCheck){
-                allColumns = DBUtil.getTableColumnsByConn(DATABASE_TYPE,connectionFactory.getConnecttionWithoutRetry(), oneTable, connectionFactory.getConnectionInfo());
-            }else{
-                allColumns = DBUtil.getTableColumnsByConn(DATABASE_TYPE,connectionFactory.getConnecttion(), oneTable, connectionFactory.getConnectionInfo());
+            if (isPreCheck) {
+                allColumns = DBUtil.getTableColumnsByConn(DATABASE_TYPE, connectionFactory.getConnecttionWithoutRetry(), oneTable, connectionFactory.getConnectionInfo());
+            } else {
+                allColumns = DBUtil.getTableColumnsByConn(DATABASE_TYPE, connectionFactory.getConnecttion(), oneTable, connectionFactory.getConnectionInfo());
             }
 
             LOG.info("table:[{}] all columns:[\n{}\n].", oneTable,
@@ -122,7 +133,7 @@ public final class OriginalConfPretreatmentUtil {
                 ListUtil.makeSureNoValueDuplicate(userConfiguredColumns, false);
 
                 // 检查列是否都为数据库表中正确的列（通过执行一次 select column from table 进行判断）
-                DBUtil.getColumnMetaData(connectionFactory.getConnecttion(), oneTable,StringUtils.join(userConfiguredColumns, ","));
+                DBUtil.getColumnMetaData(connectionFactory.getConnecttion(), oneTable, StringUtils.join(userConfiguredColumns, ","));
             }
         }
     }
@@ -160,7 +171,7 @@ public final class OriginalConfPretreatmentUtil {
             forceUseUpdate = true;
         }
 
-        String writeDataSqlTemplate = WriterUtil.getWriteTemplate(columns, valueHolders, writeMode,dataBaseType, forceUseUpdate);
+        String writeDataSqlTemplate = WriterUtil.getWriteTemplate(columns, valueHolders, writeMode, dataBaseType, forceUseUpdate);
 
         LOG.info("Write data [\n{}\n], which jdbcUrl like:[{}]", writeDataSqlTemplate, jdbcUrl);
 
@@ -180,5 +191,32 @@ public final class OriginalConfPretreatmentUtil {
         }
         return false;
     }
+
+    /**
+     * 判断传入的table和建表语句是否符合，如果符合，可跳过列校验
+     *
+     * @param originalConfig 源配置
+     * @return table是否存在
+     */
+    public static boolean matchTableAndSql(Configuration originalConfig) {
+        List<String> tables = originalConfig.getList(String.format(
+                "%s[0].%s", Constant.CONN_MARK, Key.TABLE), String.class);
+        List<String> preSqls = originalConfig.getList(Key.PRE_SQL, String.class);
+
+        List<String> matchTables = new ArrayList<String>();
+        for (String table : tables) {
+            String reg = "create\\s+table([\\s\\S]*)" + table + "([\\s\\S]*)";
+            for (String preSql : preSqls) {
+                if (Pattern.matches(reg, preSql)) {
+                    matchTables.add(table);
+                    break;
+                }
+            }
+        }
+        LOG.info("table:{}, preSql:{}, matchSize:{}", tables, preSqls, matchTables.size());
+
+        return tables.size() == matchTables.size();
+    }
+
 
 }

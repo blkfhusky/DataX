@@ -199,6 +199,7 @@ public class Engine {
     }
 
     public static void main(String[] args) throws Exception {
+        LOG.info("引擎启动, 参数为:{}", Arrays.toString(args));
         int exitCode = 0;
         try {
             Engine.entry(args);
