@@ -107,6 +107,16 @@ String code3 = "Column column = record.getColumn(1);\n" +
                 " record.setColumn(1, new StringColumn(newValue));\n" +
                 " return record;";
 ```
+6. dx_md5
+  * 参数。
+    * 第一个参数：字段编号，对应record中第几个字段。
+  * 返回：md5加密后的值
+  * 举例：
+```
+dx_md5(1)
+```
+    
+
 
 ## Job定义
 * 本例中，配置3个UDF。
