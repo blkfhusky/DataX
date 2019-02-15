@@ -21,12 +21,16 @@ public class Md5Transformer extends Transformer {
         setTransformerName("dx_md5");
     }
 
+    /**
+     *
+     * @param record 行记录，UDF进行record的处理后，更新相应的record
+     * @param paras  transformer函数参数，1个参数，表示columnIndex
+     * @return
+     */
     @Override
     public Record evaluate(Record record, Object... paras) {
         int columnIndex;
-
         try {
-
             if (paras.length != 1) {
                 throw new RuntimeException("dx_md5 paras must be 1");
             }
@@ -34,7 +38,6 @@ public class Md5Transformer extends Transformer {
         } catch (Exception e) {
             throw DataXException.asDataXException(TransformerErrorCode.TRANSFORMER_ILLEGAL_PARAMETER, "paras:" + Arrays.asList(paras).toString() + " => " + e.getMessage());
         }
-
 
         Column column = record.getColumn(columnIndex);
         String oriValue = column.asString();
