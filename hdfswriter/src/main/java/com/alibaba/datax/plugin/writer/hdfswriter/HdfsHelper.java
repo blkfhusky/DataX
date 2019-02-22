@@ -12,6 +12,8 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat;
 import org.apache.hadoop.hive.ql.io.orc.OrcSerde;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -174,6 +176,19 @@ public  class HdfsHelper {
             throw DataXException.asDataXException(HdfsWriterErrorCode.CONNECT_HDFS_IO_ERROR, e);
         }
         return isDir;
+    }
+
+    public boolean mkDir(String filePath) {
+        Path path = new Path(filePath);
+        boolean mkDir = false;
+        try {
+            mkDir = FileSystem.mkdirs(fileSystem, path, new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.ALL));
+        } catch (IOException e) {
+            String message = String.format("创建路径[%s]时发生网络IO异常,请检查您的网络是否正常！", filePath);
+            LOG.error(message);
+            throw DataXException.asDataXException(HdfsWriterErrorCode.CONNECT_HDFS_IO_ERROR, e);
+        }
+        return mkDir;
     }
 
     public void deleteFiles(Path[] paths){

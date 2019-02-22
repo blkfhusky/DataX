@@ -205,7 +205,7 @@ public final class OriginalConfPretreatmentUtil {
 
         List<String> matchTables = new ArrayList<String>();
         for (String table : tables) {
-            String reg = "create\\s+table([\\s\\S]*)" + table + "([\\s\\S]*)";
+            String reg = "(?i)create\\s+(?i)table([\\s\\S]*)" + table + "([\\s\\S]*)";
             for (String preSql : preSqls) {
                 if (Pattern.matches(reg, preSql)) {
                     matchTables.add(table);

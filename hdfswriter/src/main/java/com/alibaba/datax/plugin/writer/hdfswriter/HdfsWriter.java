@@ -147,8 +147,8 @@ public class HdfsWriter extends Writer {
 
         @Override
         public void prepare() {
-            //若路径已经存在，检查path是否是目录
-            if(hdfsHelper.isPathexists(path)){
+            //若路径已经存在，检查path是否是目录，如果不存在则创建目录
+            if(hdfsHelper.isPathexists(path) || hdfsHelper.mkDir(path)){
                 if(!hdfsHelper.isPathDir(path)){
                     throw DataXException.asDataXException(HdfsWriterErrorCode.ILLEGAL_VALUE,
                             String.format("您配置的path: [%s] 不是一个合法的目录, 请您注意文件重名, 不合法目录名等情况.",
