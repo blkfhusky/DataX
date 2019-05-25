@@ -1,12 +1,6 @@
 package com.alibaba.datax.plugin.rdbms.reader;
 
-import com.alibaba.datax.common.element.BoolColumn;
-import com.alibaba.datax.common.element.BytesColumn;
-import com.alibaba.datax.common.element.DateColumn;
-import com.alibaba.datax.common.element.DoubleColumn;
-import com.alibaba.datax.common.element.LongColumn;
-import com.alibaba.datax.common.element.Record;
-import com.alibaba.datax.common.element.StringColumn;
+import com.alibaba.datax.common.element.*;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordSender;
 import com.alibaba.datax.common.plugin.TaskPluginCollector;
@@ -22,7 +16,6 @@ import com.alibaba.datax.plugin.rdbms.util.DBUtilErrorCode;
 import com.alibaba.datax.plugin.rdbms.util.DataBaseType;
 import com.alibaba.datax.plugin.rdbms.util.RdbmsException;
 import com.google.common.collect.Lists;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -230,11 +223,11 @@ public class CommonRdbmsReader {
         public void destroy(Configuration originalConfig) {
             // do nothing
         }
-        
-        protected Record transportOneRecord(RecordSender recordSender, ResultSet rs, 
-                ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding, 
+
+        protected Record transportOneRecord(RecordSender recordSender, ResultSet rs,
+                ResultSetMetaData metaData, int columnNumber, String mandatoryEncoding,
                 TaskPluginCollector taskPluginCollector) {
-            Record record = buildRecord(recordSender,rs,metaData,columnNumber,mandatoryEncoding,taskPluginCollector); 
+            Record record = buildRecord(recordSender,rs,metaData,columnNumber,mandatoryEncoding,taskPluginCollector);
             recordSender.sendToWriter(record);
             return record;
         }
@@ -256,7 +249,7 @@ public class CommonRdbmsReader {
                         if(StringUtils.isBlank(mandatoryEncoding)){
                             rawData = rs.getString(i);
                         }else{
-                            rawData = new String((rs.getBytes(i) == null ? EMPTY_CHAR_ARRAY : 
+                            rawData = new String((rs.getBytes(i) == null ? EMPTY_CHAR_ARRAY :
                                 rs.getBytes(i)), mandatoryEncoding);
                         }
                         record.addColumn(new StringColumn(rawData));
@@ -322,6 +315,10 @@ public class CommonRdbmsReader {
                             stringData = rs.getObject(i).toString();
                         }
                         record.addColumn(new StringColumn(stringData));
+                        break;
+
+                    case microsoft.sql.Types.DATETIMEOFFSET:
+                        record.addColumn(new DateColumn(rs.getTimestamp(i)));
                         break;
 
                     default:

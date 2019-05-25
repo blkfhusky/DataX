@@ -63,5 +63,11 @@
             <artifactId>guava</artifactId>
             <version>r05</version>
         </dependency>
+		<!--mssql-->
+		<dependency>
+			<groupId>com.microsoft.sqlserver</groupId>
+			<artifactId>mssql-jdbc</artifactId>
+			<version>6.2.2.jre8</version>
+		</dependency>
     </dependencies>
 </project>
