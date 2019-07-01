@@ -262,9 +262,14 @@ public class CommonRdbmsWriter {
         public void startWriteWithConnection(RecordReceiver recordReceiver, TaskPluginCollector taskPluginCollector, Connection connection) {
             this.taskPluginCollector = taskPluginCollector;
 
-            // 用于写入数据的时候的类型根据目的表字段类型转换
+            // 用于写入数据的时候的类型根据目的表字段类型转换,
+            // 为避免关键字的影响，拼接columns
+            List<String> newColumns = new ArrayList<String>();
+            for (String column : this.columns) {
+                newColumns.add(this.table + "." + column);
+            }
             this.resultSetMetaData = DBUtil.getColumnMetaData(connection,
-                    this.table, StringUtils.join(this.columns, ","));
+                    this.table, StringUtils.join(newColumns, ","));
             // 写数据库的SQL语句
             calcWriteRecordSql();
 
